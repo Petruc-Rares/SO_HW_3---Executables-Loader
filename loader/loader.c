@@ -121,17 +121,18 @@ int so_init_loader(void)
 
 int so_execute(char *path, char *argv[])
 {
-	executable_fd = open(path, O_RDONLY);
-	if (executable_fd == -1) {
-		printf("Failed to open file named %s\n", path);
-		return errno;
-	}
-
-	page_size = getpagesize();
 	exec = so_parse_exec(path);
 
 	if (!exec)
 		return -1;
+
+	page_size = getpagesize();
+	executable_fd = open(path, O_RDONLY);
+
+	if (executable_fd == -1) {
+		printf("Failed to open file named %s\n", path);
+		return errno;
+	}
 
 	for (int i = 0; i < exec->segments_no; i++) {
 		int no_pages = exec->segments[i].mem_size / page_size;
