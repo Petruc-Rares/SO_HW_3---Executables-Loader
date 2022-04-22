@@ -92,6 +92,7 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 	if (diff_virt_physical > 0)
 		memset(addr + page_size - diff_virt_physical, 0, diff_virt_physical);
 
+	// restore the permissions for the current segment
 	rc = mprotect(addr, page_size, executable_segments[it].perm);
 	if (rc == -1) {
 		printf("failed mprotect\n");
