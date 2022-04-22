@@ -20,6 +20,10 @@ static struct sigaction old_action;
 static int executable_fd;
 static int page_size;
 
+int min(int a, int b) {
+	return (a < b) ? a : b;
+}
+
 static void segv_handler(int signum, siginfo_t *info, void *context)
 {
 	char *addr;
@@ -30,7 +34,6 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 		return;
 	}
 
-	//printf("pe sigsegv\n");		
 	uintptr_t fault_address = (uintptr_t) info->si_addr;
 	so_seg_t *executable_segments = exec->segments;
 	int no_executable_segments = exec->segments_no;
@@ -58,21 +61,44 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 		return;		
 	}
 
+	int flags = MAP_PRIVATE | MAP_FIXED;
+
+	// check if crt page exceeds file size
+	// if so, don't read anything from file
+	printf("flags before: %d\n", flags);
+	if (page_idx * page_size >
+			executable_segments[it].file_size)
+		flags |= MAP_ANONYMOUS;
+
 	// fault address is in segment[it] at page @page_idx
 	addr = mmap((void *)executable_segments[it].vaddr + page_idx * page_size, page_size,
-			executable_segments[it].perm, MAP_SHARED | MAP_FIXED,
-			executable_fd, executable_segments[it].offset + page_size * page_idx);
-
+			PROT_READ | PROT_EXEC | PROT_WRITE, flags,
+			executable_fd, executable_segments[it].offset + page_idx * page_size);
 
 	if (addr == MAP_FAILED) {
-		//printf("Allocation of page %d in segment: %d failed\n", page_idx, it);
-		//printf("errno: %d\n", errno);
+		printf("Allocation of page %d in segment: %d failed\n", page_idx, it);
+		printf("errno: %d\n", errno);
 		return;
 	}
 
 	((int *) executable_segments[it].data)[page_idx] = 1;
 
-	//memset()
+	// check if there is space left from physical alloc
+	// to virtual alloc
+	int diff_virt_physical = (page_idx + 1) * page_size - executable_segments[it].file_size;
+
+	//printf("%d vs %d\n", addr, executable_segments[it].vaddr + page_idx * page_size, page_size);
+	printf("se va scrie la %d, atatia bytes: %d\n", addr+ page_size - diff_virt_physical, diff_virt_physical);
+	if (diff_virt_physical > 0)
+		memset(addr + page_size - diff_virt_physical, 0, diff_virt_physical);
+		// todo check result memset
+
+	rc = mprotect(addr, page_size, executable_segments[it].perm);
+	if (rc == -1) {
+		printf("failed mprotect\n");
+		return;
+	}
+	// todo check result mprotect
 }
 
 int so_init_loader(void)
@@ -120,14 +146,14 @@ void print_exec(so_exec_t *exec) {
 int so_execute(char *path, char *argv[])
 {
 	// TODO - O_RDONLY or O_RDWR?
-	executable_fd = open(path, O_RDWR);
+	executable_fd = open(path, O_RDONLY);
 	if (executable_fd == -1) {
 		printf("Failed to open file named %s\n", path);
 		return errno;
 	}
 	page_size = getpagesize();
-
 	exec = so_parse_exec(path);
+	
 	if (!exec)
 		return -1;
 
