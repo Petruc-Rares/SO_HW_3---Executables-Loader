@@ -65,7 +65,6 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 
 	// check if crt page exceeds file size
 	// if so, don't read anything from file
-	printf("flags before: %d\n", flags);
 	if (page_idx * page_size >
 			executable_segments[it].file_size)
 		flags |= MAP_ANONYMOUS;
@@ -173,7 +172,7 @@ int so_execute(char *path, char *argv[])
 			return errno;
 		}
 	}
-	print_exec(exec);
+	//print_exec(exec);
 
 	so_start_exec(exec, argv);
 
