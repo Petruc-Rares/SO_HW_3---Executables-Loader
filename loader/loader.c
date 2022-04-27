@@ -15,14 +15,9 @@
 #include "exec_parser.h"
 
 static so_exec_t *exec;
-
 static struct sigaction old_action;
 static int executable_fd;
 static int page_size;
-
-int min(int a, int b) {
-	return (a < b) ? a : b;
-}
 
 static void segv_handler(int signum, siginfo_t *info, void *context)
 {
@@ -64,6 +59,7 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 		return;
 	}
 
+
 	int flags = MAP_PRIVATE | MAP_FIXED;
 
 	// check if crt page exceeds file size
@@ -73,8 +69,10 @@ static void segv_handler(int signum, siginfo_t *info, void *context)
 		flags |= MAP_ANONYMOUS;
 
 	// fault address is in segment[it] at page @page_idx
+	// we use PROT_WRITE, as we might need to set some
+	// address space to 0 using memset
 	addr = mmap((void *)executable_segments[it].vaddr + page_idx * page_size, page_size,
-			PROT_READ | PROT_EXEC | PROT_WRITE, flags,
+			PROT_WRITE, flags,
 			executable_fd, executable_segments[it].offset + page_idx * page_size);
 
 	if (addr == MAP_FAILED) {
