@@ -1,0 +1,33 @@
+PETRUC RAREȘ
+336 CA
+
+                                    Tema 3 SO
+
+Abordare generală
+    Am păstrat scheletul din so_execute, anume funcțiile so_parse_exec
+și so_start_exec, la care am adăugat deschiderea fișierului de input și
+alocarea câte unui vector pentru data fiecărui segment (o mapare
+de la fiecare pagină la un fel de valoare booaleană: 0, dacă pagina nu
+a fost mapată, respectiv 1 altfel). Ulterior, în so_init_loader am copiat
+structura pe care am folosit-o și în laboratorul 6, iar pentru segv_handler
+am urmărit întocmai pașii din cerința de pe ocw, din paragraful ce începe
+cu "Pentru a implementa logica de demand paging".
+
+Utilitate
+    Tema mi s-a părut utilă. Pot spune că am înțeles ceva mai bine lucrul
+cu memoria virtuală și maparea fișierelor.
+
+Implementare
+    Am realizat întreaga temă pe Linux. Am întâmpinat dificultăți în
+înțelegerea enunțului, cumva primele 2 ore din temă m-am asigurat că
+am înteles mai tot, tema părând destul de abstractă la început. Ce am
+realizat și mă mulțumește oarecum a fost că nu am folosit read și alte
+funcții pentru a copia din fișier în paginile alocate cu mmap, ci m-am
+folosit direct de câmpul offset al lui mmap cu care se realiza citirea.
+    Implementarea mea mi se pare scurtă și eficientă.
+
+Compilare și rulare
+    Din linia de comandă am dat make și ./run_all pentru testare.
+
+Bibliografie
+    https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-06
