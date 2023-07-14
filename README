@@ -27,7 +27,7 @@ folosit direct de câmpul offset al lui mmap cu care se realiza citirea.
     Implementarea mea mi se pare scurtă și eficientă.
 
 Compilare și rulare
-    Din linia de comandă am dat make și ./run_all pentru testare.
+    Din linia de comandă am dat make și make -f Makefile.checker pentru testare.
 
 Bibliografie
     https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-06
